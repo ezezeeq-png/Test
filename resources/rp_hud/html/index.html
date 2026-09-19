@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Menu</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="menu" class="hidden">
+    <div class="panel">
+      <div class="panel-header">
+        <h1>Menu</h1>
+        <button id="close-btn" aria-label="Fermer">&times;</button>
+      </div>
+
+      <div class="needs">
+        <div class="need">
+          <span>Faim</span>
+          <div class="bar"><div id="hunger-fill" class="fill hunger"></div></div>
+        </div>
+        <div class="need">
+          <span>Soif</span>
+          <div class="bar"><div id="thirst-fill" class="fill thirst"></div></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="inventory-btn">Ouvrir l'inventaire</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
