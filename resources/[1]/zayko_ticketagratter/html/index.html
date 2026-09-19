@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Ticket a gratter</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div id="scratch-screen" class="screen">
+            <div class="panel scratch-panel">
+                <div class="panel-header">
+                    <h1 id="scratch-title">Ticket</h1>
+                    <button id="scratch-close" class="close-btn">✕</button>
+                </div>
+                <p class="subtitle">Grattes les 9 cases avec ta souris !</p>
+
+                <div id="grid" class="grid"></div>
+
+                <div class="scratch-actions">
+                    <button id="reveal-all-btn">Gratter tout</button>
+                </div>
+
+                <div id="result-banner" class="result-banner hidden">
+                    <p id="result-text"></p>
+                    <button id="result-continue-btn">Continuer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
