@@ -4,11 +4,7 @@
         : 'zayko_ticketagratter';
 
     const app = document.getElementById('app');
-    const storeScreen = document.getElementById('store-screen');
     const scratchScreen = document.getElementById('scratch-screen');
-    const ticketList = document.getElementById('ticket-list');
-    const storeError = document.getElementById('store-error');
-    const storeCloseBtn = document.getElementById('store-close');
     const scratchCloseBtn = document.getElementById('scratch-close');
     const scratchTitle = document.getElementById('scratch-title');
     const grid = document.getElementById('grid');
@@ -21,6 +17,7 @@
     const BRUSH_RADIUS = 18;
     let revealedCount = 0;
     let cellsRevealFns = [];
+    let pendingResult = null;
 
     function post(action, data) {
         return fetch(`https://${resourceName}/${action}`, {
@@ -36,44 +33,6 @@
 
     function hideApp() {
         app.classList.add('hidden');
-    }
-
-    function showScreen(screen) {
-        storeScreen.classList.add('hidden');
-        scratchScreen.classList.add('hidden');
-        screen.classList.remove('hidden');
-    }
-
-    function renderTicket(ticket) {
-        const legendHtml = ticket.legend.map((l) => `<span>${l.symbol} ${l.label}</span>`).join('');
-        return `
-            <div class="ticket-card">
-                <div class="ticket-icon" style="background:${ticket.color}33;color:${ticket.color}">🎫</div>
-                <div class="ticket-info">
-                    <div class="name">${ticket.label}</div>
-                    <div class="desc">${ticket.desc}</div>
-                    <div class="ticket-legend">${legendHtml}</div>
-                </div>
-                <div class="ticket-buy">
-                    <div class="price">${ticket.price}$</div>
-                    <button data-id="${ticket.id}">Acheter</button>
-                </div>
-            </div>
-        `;
-    }
-
-    function openStore(tickets) {
-        storeError.classList.add('hidden');
-        ticketList.innerHTML = tickets.map(renderTicket).join('');
-        ticketList.querySelectorAll('button[data-id]').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                ticketList.querySelectorAll('button[data-id]').forEach((b) => (b.disabled = true));
-                storeError.classList.add('hidden');
-                post('buyTicket', { id: btn.dataset.id });
-            });
-        });
-        showApp();
-        showScreen(storeScreen);
     }
 
     function buildCell(symbol) {
@@ -208,8 +167,6 @@
         }
     }
 
-    let pendingResult = null;
-
     function showResult() {
         if (!pendingResult) return;
         resultText.textContent = pendingResult.won
@@ -235,32 +192,24 @@
         });
 
         showApp();
-        showScreen(scratchScreen);
+        scratchScreen.classList.remove('hidden');
     }
 
     revealAllBtn.addEventListener('click', () => {
         cellsRevealFns.forEach((fn) => fn());
     });
 
-    resultContinueBtn.addEventListener('click', () => {
+    function closeAndReleaseFocus() {
         post('closeMenu');
         hideApp();
-    });
+    }
 
-    storeCloseBtn.addEventListener('click', () => {
-        post('closeMenu');
-        hideApp();
-    });
-
-    scratchCloseBtn.addEventListener('click', () => {
-        post('closeMenu');
-        hideApp();
-    });
+    resultContinueBtn.addEventListener('click', closeAndReleaseFocus);
+    scratchCloseBtn.addEventListener('click', closeAndReleaseFocus);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            post('closeMenu');
-            hideApp();
+            closeAndReleaseFocus();
         }
     });
 
@@ -269,15 +218,8 @@
         if (!data || !data.action) return;
 
         switch (data.action) {
-            case 'openStore':
-                openStore(data.tickets);
-                break;
             case 'openScratch':
                 openScratch(data.result);
-                break;
-            case 'buyDenied':
-                storeError.classList.remove('hidden');
-                ticketList.querySelectorAll('button[data-id]').forEach((b) => (b.disabled = false));
                 break;
             case 'close':
                 hideApp();

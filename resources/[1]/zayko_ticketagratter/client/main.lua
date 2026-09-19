@@ -1,6 +1,7 @@
 ESX = exports['es_extended']:getSharedObject()
 
-local isMenuOpen = false
+local SHOP_MENU_ID = 'zayko_ticketagratter_shop'
+
 local isNearShop = false
 
 local function drawText3D(coords, text)
@@ -17,62 +18,48 @@ local function drawText3D(coords, text)
     DrawText(x, y)
 end
 
-local function buildTicketsForNui()
-    local list = {}
-    for _, ticket in ipairs(Config.Tickets) do
-        local legend = {}
-        for _, r in ipairs(ticket.rewards) do
-            if r.type ~= 'none' then
-                legend[#legend + 1] = { symbol = r.symbol, label = r.label }
-            end
+local function buildLegendText(ticket)
+    local lines = { ticket.desc, '', 'Gains possibles :' }
+    for _, r in ipairs(ticket.rewards) do
+        if r.type ~= 'none' then
+            lines[#lines + 1] = ('%s %s'):format(r.symbol, r.label)
         end
-        list[#list + 1] = {
-            id = ticket.id,
-            label = ticket.label,
-            price = ticket.price,
-            desc = ticket.desc,
-            color = ticket.color,
-            legend = legend,
-        }
     end
-    return list
+    return table.concat(lines, '\n')
 end
 
-local function openStore()
-    if isMenuOpen then return end
-    isMenuOpen = true
+local function openShopMenu()
+    exports.ZaykoRAGEUI:CreateMenu(SHOP_MENU_ID, '🎰 Loterie', 'Choisis ton ticket')
+
+    for _, ticket in ipairs(Config.Tickets) do
+        local label = ('%s - %d$'):format(ticket.label, ticket.price)
+        exports.ZaykoRAGEUI:AddButton(SHOP_MENU_ID, label, buildLegendText(ticket), ticket.id)
+    end
+
+    exports.ZaykoRAGEUI:Open(SHOP_MENU_ID)
+end
+
+AddEventHandler('ZaykoRAGEUI:onSelect', function(menuId, data)
+    if menuId ~= SHOP_MENU_ID then return end
+    TriggerServerEvent('zayko_ticketagratter:buyTicket', data)
+end)
+
+local function openScratchScreen(resultData)
     SetNuiFocus(true, true)
-    SendNUIMessage({
-        action = 'openStore',
-        tickets = buildTicketsForNui(),
-    })
-end
-
-local function closeMenu()
-    isMenuOpen = false
-    SetNuiFocus(false, false)
-    SendNUIMessage({ action = 'close' })
-end
-
-RegisterNUICallback('buyTicket', function(data, cb)
-    TriggerServerEvent('zayko_ticketagratter:buyTicket', data.id)
-    cb('ok')
-end)
-
-RegisterNUICallback('closeMenu', function(_, cb)
-    closeMenu()
-    cb('ok')
-end)
-
-RegisterNetEvent('zayko_ticketagratter:ticketResult', function(resultData)
     SendNUIMessage({
         action = 'openScratch',
         result = resultData,
     })
+end
+
+RegisterNUICallback('closeMenu', function(_, cb)
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'close' })
+    cb('ok')
 end)
 
-RegisterNetEvent('zayko_ticketagratter:buyDenied', function()
-    SendNUIMessage({ action = 'buyDenied' })
+RegisterNetEvent('zayko_ticketagratter:openScratch', function(resultData)
+    openScratchScreen(resultData)
 end)
 
 CreateThread(function()
@@ -98,8 +85,8 @@ CreateThread(function()
                 isNearShop = true
                 drawText3D(closest, '[E] Ouvrir la loterie')
 
-                if IsControlJustPressed(0, 38) and not isMenuOpen then -- E
-                    openStore()
+                if IsControlJustPressed(0, 38) and not exports.ZaykoRAGEUI:IsOpen(SHOP_MENU_ID) then -- E
+                    openShopMenu()
                 end
             else
                 isNearShop = false
@@ -108,8 +95,8 @@ CreateThread(function()
             isNearShop = false
         end
 
-        if isMenuOpen and not isNearShop then
-            closeMenu()
+        if not isNearShop and exports.ZaykoRAGEUI:IsOpen(SHOP_MENU_ID) then
+            exports.ZaykoRAGEUI:Close()
         end
 
         Wait(sleep)

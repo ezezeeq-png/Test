@@ -26,4 +26,7 @@ files {
     'html/script.js'
 }
 
--- Necessite es_extended (ESX Legacy)
+-- Necessite es_extended (ESX Legacy) et ZaykoRAGEUI (menu du magasin).
+-- Dans server.cfg, demarre ZaykoRAGEUI AVANT zayko_ticketagratter :
+--   ensure ZaykoRAGEUI
+--   ensure zayko_ticketagratter

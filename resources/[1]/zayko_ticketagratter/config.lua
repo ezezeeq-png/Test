@@ -24,10 +24,14 @@ Config.Symbols = { '🍀', '💰', '🍒', '💎', '7️⃣', '🔔', '🍋', '�
 -- type = 'cash'  -> ajoute de l'argent liquide, symbole associe pour la grille
 -- type = 'item'  -> ajoute un item d'inventaire, symbole associe pour la grille
 --                   (verifie que ces items existent bien dans ton inventaire avant utilisation)
+-- ticket.item = nom de l'item d'inventaire representant le ticket lui-meme
+-- (a creer dans ton inventaire, marque "usable"). Achete = tu recois cet item,
+-- tu l'utilises depuis l'inventaire quand tu veux pour le gratter.
 Config.Tickets = {
     {
         id = 'chance',
         label = 'Ticket Chance',
+        item = 'ticket_chance',
         price = 20,
         color = '#2ecc71',
         desc = 'Le ticket dabutant, petites mises, petits gains.',
@@ -42,6 +46,7 @@ Config.Tickets = {
     {
         id = 'fortune',
         label = 'Ticket Fortune',
+        item = 'ticket_fortune',
         price = 50,
         color = '#3498db',
         desc = 'Plus cher, mais les gains sont bien plus consequents.',
@@ -57,6 +62,7 @@ Config.Tickets = {
     {
         id = 'jackpot',
         label = 'Ticket Jackpot',
+        item = 'ticket_jackpot',
         price = 100,
         color = '#e74c3c',
         desc = "Le plus cher, le plus risque, mais un vrai jackpot possible.",

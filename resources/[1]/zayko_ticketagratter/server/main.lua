@@ -11,6 +11,24 @@ local function getTicketById(id)
     return nil
 end
 
+local function getTicketByItem(item)
+    for _, ticket in ipairs(Config.Tickets) do
+        if ticket.item == item then
+            return ticket
+        end
+    end
+    return nil
+end
+
+local function onCooldown(src)
+    local now = GetGameTimer()
+    if playerCooldowns[src] and now - playerCooldowns[src] < 1000 then
+        return true
+    end
+    playerCooldowns[src] = now
+    return false
+end
+
 local function pickReward(rewards)
     local total = 0
     for _, r in ipairs(rewards) do
@@ -31,7 +49,7 @@ end
 
 -- Genere une grille 3x3. Si winSymbol est fourni, il apparait exactement 3 fois
 -- (ticket gagnant) et aucun autre symbole ne peut en atteindre 3.
--- Sinon, la grille est reguliree pour qu'aucun symbole n'apparaisse 3 fois (perdu).
+-- Sinon, la grille est reguliere pour qu'aucun symbole n'apparaisse 3 fois (perdu).
 local function generateGrid(winSymbol)
     local grid = {}
 
@@ -91,49 +109,64 @@ local function generateGrid(winSymbol)
     return grid
 end
 
+-- Achat : on verifie/retire l'argent et on donne l'item ticket.
+-- Le tirage (gagne/perdu) n'est PAS calcule ici : il l'est seulement quand
+-- le joueur utilise le ticket depuis son inventaire, quand il veut.
 RegisterNetEvent('zayko_ticketagratter:buyTicket', function(ticketId)
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     if not xPlayer then return end
-
-    local now = GetGameTimer()
-    if playerCooldowns[src] and now - playerCooldowns[src] < 1000 then
-        return
-    end
-    playerCooldowns[src] = now
+    if onCooldown(src) then return end
 
     local ticket = getTicketById(ticketId)
     if not ticket then return end
 
     if xPlayer.getMoney() < ticket.price then
         TriggerClientEvent('esx:showNotification', src, "Vous n'avez pas assez d'argent pour ce ticket.")
-        TriggerClientEvent('zayko_ticketagratter:buyDenied', src)
         return
     end
 
     xPlayer.removeMoney(ticket.price)
+    xPlayer.addInventoryItem(ticket.item, 1)
+    TriggerClientEvent('esx:showNotification', src,
+        ('Ticket achete : %s. Utilise-le depuis ton inventaire quand tu veux le gratter.'):format(ticket.label))
+end)
 
-    local reward = pickReward(ticket.rewards)
-    local resultData = {
-        ticketLabel = ticket.label,
-        won = false,
-        rewardLabel = 'Perdu, retente ta chance !',
-    }
+CreateThread(function()
+    for _, ticket in ipairs(Config.Tickets) do
+        ESX.RegisterUsableItem(ticket.item, function(playerId)
+            local xPlayer = ESX.GetPlayerFromId(playerId)
+            if not xPlayer then return end
+            if onCooldown(playerId) then return end
 
-    if reward.type == 'none' then
-        resultData.grid = generateGrid(nil)
-    else
-        resultData.grid = generateGrid(reward.symbol)
-        resultData.won = true
+            local t = getTicketByItem(ticket.item)
+            if not t then return end
 
-        if reward.type == 'cash' then
-            xPlayer.addMoney(reward.amount)
-            resultData.rewardLabel = ('Gagne : %s'):format(reward.label)
-        elseif reward.type == 'item' then
-            xPlayer.addInventoryItem(reward.item, reward.amount or 1)
-            resultData.rewardLabel = ('Gagne : %s'):format(reward.label)
-        end
+            xPlayer.removeInventoryItem(t.item, 1)
+
+            local reward = pickReward(t.rewards)
+            local resultData = {
+                ticketLabel = t.label,
+                won = false,
+                rewardLabel = 'Perdu, retente ta chance !',
+            }
+
+            if reward.type == 'none' then
+                resultData.grid = generateGrid(nil)
+            else
+                resultData.grid = generateGrid(reward.symbol)
+                resultData.won = true
+
+                if reward.type == 'cash' then
+                    xPlayer.addMoney(reward.amount)
+                    resultData.rewardLabel = ('Gagne : %s'):format(reward.label)
+                elseif reward.type == 'item' then
+                    xPlayer.addInventoryItem(reward.item, reward.amount or 1)
+                    resultData.rewardLabel = ('Gagne : %s'):format(reward.label)
+                end
+            end
+
+            TriggerClientEvent('zayko_ticketagratter:openScratch', playerId, resultData)
+        end)
     end
-
-    TriggerClientEvent('zayko_ticketagratter:ticketResult', src, resultData)
 end)
