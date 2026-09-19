@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Ticket a gratter</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div id="store-screen" class="screen">
+            <div class="panel">
+                <div class="panel-header">
+                    <h1>🎰 Loterie</h1>
+                    <button id="store-close" class="close-btn">✕</button>
+                </div>
+                <p class="subtitle">Choisis ton ticket a gratter</p>
+                <div id="ticket-list" class="ticket-list"></div>
+                <p id="store-error" class="store-error hidden">Fonds insuffisants.</p>
+            </div>
+        </div>
+
+        <div id="scratch-screen" class="screen hidden">
+            <div class="panel scratch-panel">
+                <div class="panel-header">
+                    <h1 id="scratch-title">Ticket</h1>
+                    <button id="scratch-close" class="close-btn">✕</button>
+                </div>
+                <p class="subtitle">Grattes les 9 cases avec ta souris !</p>
+
+                <div id="grid" class="grid"></div>
+
+                <div class="scratch-actions">
+                    <button id="reveal-all-btn">Gratter tout</button>
+                </div>
+
+                <div id="result-banner" class="result-banner hidden">
+                    <p id="result-text"></p>
+                    <button id="result-continue-btn">Continuer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
